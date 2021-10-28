@@ -1,0 +1,88 @@
+﻿@page "/"
+@namespace GoogleAPIS.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoogleAPIS</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="GoogleAPIS.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+<script src="_framework/blazor.server.js"></script>
+
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyAZ4yQ_PieV9yyZf1XNYBKp4uOTqhnkVow"></script>
+<script type="text/javascript">
+    window._callbacker = function(callbackObjectInstance, callbackMethod, callbackId, cmd, args){
+        var parts = cmd.split('.');
+        var targetFunc = window;
+        var parentObject = window;
+        for(var i = 0; i < parts.length; i++){
+            if (i == 0 && part == 'window') continue;
+            var part = parts[i];
+            parentObject = targetFunc;
+            targetFunc = targetFunc[part];
+        }
+        args = JSON.parse(args);
+        args.push(function(e, d){ 
+            var args = [];
+            for(var i in arguments) args.push(JSON.stringify(arguments[i]));
+            callbackObjectInstance.invokeMethodAsync(callbackMethod, callbackId, args); 
+        });
+        targetFunc.apply(parentObject, args);
+    };
+
+
+    window.getlocation = function (callback) {
+        console.log('Iniciando solicitud');
+        navigator.geolocation.getCurrentPosition(success);
+        window.callback = callback;
+    }
+
+    function success(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        window.coords = position.coords;
+        var city = position.coords.locality;
+        var myLatlng = new google.maps.LatLng(latitude, longitude);
+        var myOptions = {
+            center: myLatlng,
+            zoom: 12,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+        var marker = new google.maps.Marker({
+            position: myLatlng,
+            title: "lat: " + latitude + " long: " + longitude
+        });
+
+        marker.setMap(map);
+        var infowindow = new google.maps.InfoWindow({ content: "<b>User Address</b><br/> Latitude:" + latitude + "<br /> Longitude:" + longitude + "" });
+        infowindow.open(map, marker);
+
+        window.callback("" +latitude + "," + longitude);
+    }
+</script>
+</body>
+</html>

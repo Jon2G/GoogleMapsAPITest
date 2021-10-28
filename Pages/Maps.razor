@@ -1,0 +1,42 @@
+﻿@page "/maps"
+@using AsyncAwaitBestPractices
+@using Kit.Services.Web
+@inject IJSRuntime jsRuntime
+
+
+<form id="form1" runat="server">
+    <div id="map_canvas" style="width: 500px; height: 400px"></div>
+</form>
+<label>@Hora</label>
+<button @onclick="GetLocation">Iniciar</button>
+
+@code {
+    private Callbacker callbacker;
+    public string Hora { get; set; }
+
+    private void GetLocation()
+    {
+        callbacker.InvokeJS(async (response) =>
+        {
+            Kit.Services.Web.WebService service = new WebService("https://maps.googleapis.com/maps/api/timezone");
+            var tresponse = await service.GET("json", new Dictionary<string, string>()
+            {
+                {"location",response.arguments[0].Replace("\"",string.Empty)},
+                {"timestamp", "1331161200"},
+                {"key","AIzaSyAZ4yQ_PieV9yyZf1XNYBKp4uOTqhnkVow"}
+                });
+            Hora = tresponse.Response;
+            StateHasChanged();
+        }, "getlocation");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        callbacker = new Callbacker(this.jsRuntime);
+
+
+    }
+
+
+}
